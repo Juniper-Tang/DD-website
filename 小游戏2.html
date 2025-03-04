@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>新新掌机</title>
+  <!-- 引入像素风字体 Press Start 2P -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+
+  <style>
+    /* 1. 基础布局与像素风设定 */
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000;            /* 黑色背景 */
+      color: #fff;
+      font-family: 'Press Start 2P', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 20px 0 10px;
+      font-size: 16px;
+      text-align: center;
+    }
+
+    /* 2. 容器：去掉外层灰色框，只保留简单深色背景 */
+    .pixel-container {
+      width: 360px;
+      background: #111;           /* 深一点的背景色，和 body 有区分 */
+      padding: 10px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    /* 3. 按钮区域布局 */
+    .buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-gap: 10px;
+      margin: 10px 0 20px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-items: center;
+    }
+    .buttons-grid-voice {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    /* 4. 像素风按钮样式 */
+    .pixel-btn {
+      width: 80px;
+      height: 50px;
+      background: #333;             /* 按钮底色 */
+      border: 4px solid #555;       /* 粗边框，像素感 */
+      border-radius: 0;             /* 去掉圆角，纯方形 */
+      color: #fff;
+      font-size: 10px;
+      text-align: center;
+      line-height: 50px;            /* 文字居中 */
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.1s, transform 0.1s;
+    }
+    .pixel-btn:hover {
+      background: #444;
+      transform: scale(0.95);
+    }
+    .pixel-btn.selected {
+      background: #0f0;             /* 选中时背景变亮 */
+      color: #000;                  /* 文字改为黑色以对比 */
+      border-color: #0f0;           /* 选中时边框也变成绿色 */
+      transform: scale(0.9);
+    }
+
+    /* 5. 底部信息区 */
+    .info-box {
+      width: 100%;
+      min-height: 80px;
+      background: #222;
+      padding: 10px;
+      font-size: 10px;
+      box-sizing: border-box;
+      color: #fff;
+      overflow: auto;
+    }
+    .info-box p {
+      margin: 4px 0;
+      line-height: 14px;
+    }
+    .info-box ul {
+      margin-left: 18px;
+    }
+  </style>
+</head>
+<body>
+  <h1>新新掌机</h1>
+  <div class="pixel-container">
+    <!-- 按钮们 -->
+    <div class="buttons-grid">
+      <!-- 时态（过去、现在、将来）: 3个 -->
+      <button class="pixel-btn" data-type="time" data-value="past">过去</button>
+      <button class="pixel-btn" data-type="time" data-value="present">现在</button>
+      <button class="pixel-btn" data-type="time" data-value="future">将来</button>
+
+      <!-- 状态（一般、进行、完成）: 3个 -->
+      <button class="pixel-btn" data-type="aspect" data-value="simple">一般</button>
+      <button class="pixel-btn" data-type="aspect" data-value="continuous">进行</button>
+      <button class="pixel-btn" data-type="aspect" data-value="perfect">完成</button>
+    </div>
+
+    <!-- 语态（主动、被动）: 2个 -->
+    <div class="buttons-grid-voice">
+      <button class="pixel-btn" data-type="voice" data-value="active">主动</button>
+      <button class="pixel-btn" data-type="voice" data-value="passive">被动</button>
+    </div>
+
+    <!-- 显示结果 -->
+    <div class="info-box" id="infoBox">
+      <p>单击一个「时态 + 状态 + 语态」组合，若要取消可再次点击同一按钮</p>
+    </div>
+  </div>
+
+  <script>
+    // 存储当前选择
+    let selectedTime = null;      // past / present / future
+    let selectedAspect = null;    // simple / continuous / perfect
+    let selectedVoice = null;     // active / passive
+
+    const infoBox = document.getElementById('infoBox');
+    const buttons = document.querySelectorAll('.pixel-btn');
+
+    // 给所有按钮绑定单击事件
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => handleClick(btn));
+    });
+
+    function handleClick(btn) {
+      const type = btn.dataset.type;   // "time" / "aspect" / "voice"
+      const value = btn.dataset.value; // "past" / "simple" / "active" etc.
+
+      // 如果按钮已选中，就取消选中
+      if (btn.classList.contains('selected')) {
+        btn.classList.remove('selected');
+        if (type === 'time' && selectedTime === value) selectedTime = null;
+        if (type === 'aspect' && selectedAspect === value) selectedAspect = null;
+        if (type === 'voice' && selectedVoice === value) selectedVoice = null;
+        updateInfo();
+        return;
+      }
+
+      // 如果没选中，先取消同类型的其他按钮
+      if (type === 'time') {
+        const oldBtn = document.querySelector('.pixel-btn[data-type="time"].selected');
+        if (oldBtn) oldBtn.classList.remove('selected');
+        selectedTime = value;
+      }
+      if (type === 'aspect') {
+        const oldBtn = document.querySelector('.pixel-btn[data-type="aspect"].selected');
+        if (oldBtn) oldBtn.classList.remove('selected');
+        selectedAspect = value;
+      }
+      if (type === 'voice') {
+        const oldBtn = document.querySelector('.pixel-btn[data-type="voice"].selected');
+        if (oldBtn) oldBtn.classList.remove('selected');
+        selectedVoice = value;
+      }
+
+      // 选中当前按钮
+      btn.classList.add('selected');
+      updateInfo();
+    }
+
+    function updateInfo() {
+      // 若三要素不全，显示提示
+      if (!selectedTime || !selectedAspect || !selectedVoice) {
+        infoBox.innerHTML = `
+          <p>单击一个「时态 + 状态 + 语态」组合，若要取消可再次点击同一按钮</p>
+        `;
+        return;
+      }
+
+      // 组合 key
+      const comboKey = `${selectedTime}-${selectedAspect}-${selectedVoice}`;
+      const result = combos[comboKey];
+      if (!result) {
+        infoBox.innerHTML = `<p>这个组合暂未定义。</p>`;
+        return;
+      }
+
+      // 显示用法、结构、例句
+      infoBox.innerHTML = `
+        <p><strong>用法：</strong> ${result.usage}</p>
+        <p><strong>结构：</strong> ${result.structure}</p>
+        <p><strong>例句：</strong></p>
+        <ul>
+          ${result.examples.map(e => `<li>${e}</li>`).join('')}
+        </ul>
+      `;
+    }
+
+    // 定义 18 种组合
+    const combos = {
+      "past-simple-active": {
+        usage: "描述过去某个时间点已完成的动作或事实。",
+        structure: "主语 + 动词过去式 (V-ed / 不规则)",
+        examples: ["I walked to school yesterday.", "He ate an apple this morning."]
+      },
+      "past-simple-passive": {
+        usage: "描述过去的动作，强调被动接受。",
+        structure: "主语 + was/were + 动词过去分词",
+        examples: ["The window was broken by Tom.", "The cake was eaten yesterday."]
+      },
+
+      "past-continuous-active": {
+        usage: "描述过去某一时刻正在进行的动作。",
+        structure: "主语 + was/were + 动词-ing",
+        examples: ["I was reading when you called.", "They were playing football at 4 p.m."]
+      },
+      "past-continuous-passive": {
+        usage: "描述过去正在被执行的动作（较少用）。",
+        structure: "主语 + was/were + being + 动词过去分词",
+        examples: ["The house was being painted at that time."]
+      },
+
+      "past-perfect-active": {
+        usage: "描述在过去某时之前已经完成的动作。",
+        structure: "主语 + had + 动词过去分词",
+        examples: ["I had finished my homework before 8 p.m."]
+      },
+      "past-perfect-passive": {
+        usage: "在过去某时之前已被完成。",
+        structure: "主语 + had been + 动词过去分词",
+        examples: ["The work had been done before he arrived."]
+      },
+
+      "present-simple-active": {
+        usage: "描述习惯、事实或经常发生的动作。",
+        structure: "主语 + 动词原形 (第三人称单数 +s/es)",
+        examples: ["He plays basketball every Sunday.", "I live in Beijing."]
+      },
+      "present-simple-passive": {
+        usage: "描述一般事实中的被动情况。",
+        structure: "主语 + am/is/are + 动词过去分词",
+        examples: ["English is spoken here.", "The house is cleaned every day."]
+      },
+
+      "present-continuous-active": {
+        usage: "描述此刻正在进行或近期正在发生的动作。",
+        structure: "主语 + am/is/are + 动词-ing",
+        examples: ["I am studying now.", "They are playing football."]
+      },
+      "present-continuous-passive": {
+        usage: "描述现在正在被执行的动作。",
+        structure: "主语 + am/is/are + being + 动词过去分词",
+        examples: ["Dinner is being prepared.", "A new road is being built."]
+      },
+
+      "present-perfect-active": {
+        usage: "描述过去开始并持续到现在或对现在有影响。",
+        structure: "主语 + have/has + 动词过去分词",
+        examples: ["I have lived here for 5 years.", "She has finished her work."]
+      },
+      "present-perfect-passive": {
+        usage: "描述从过去到现在动作被完成。",
+        structure: "主语 + have/has been + 动词过去分词",
+        examples: ["The room has been cleaned.", "Many changes have been made."]
+      },
+
+      "future-simple-active": {
+        usage: "描述将来的动作或事件。",
+        structure: "主语 + will + 动词原形",
+        examples: ["I will travel to Japan next month.", "She will call you tomorrow."]
+      },
+      "future-simple-passive": {
+        usage: "描述将来会被执行的动作。",
+        structure: "主语 + will be + 动词过去分词",
+        examples: ["The package will be delivered tomorrow."]
+      },
+
+      "future-continuous-active": {
+        usage: "描述将来某一时刻正在进行的动作。",
+        structure: "主语 + will be + 动词-ing",
+        examples: ["I will be working at 5 p.m. tomorrow."]
+      },
+      "future-continuous-passive": {
+        usage: "很少使用，表示将来某时正在被执行。",
+        structure: "主语 + will be + being + 动词过去分词",
+        examples: ["(罕见) The documents will be being reviewed next week."]
+      },
+
+      "future-perfect-active": {
+        usage: "描述将来某时之前已经完成的动作。",
+        structure: "主语 + will have + 动词过去分词",
+        examples: ["I will have finished the report by next Monday."]
+      },
+      "future-perfect-passive": {
+        usage: "描述将来某时之前将被完成。",
+        structure: "主语 + will have been + 动词过去分词",
+        examples: ["The project will have been completed by then."]
+      }
+    };
+  </script>
+</body>
+</html>
